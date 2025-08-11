@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox('myBox');
   runApp(const ProviderScope(child: MyApp()) );
 }
 
@@ -19,6 +23,7 @@ class MyApp extends StatelessWidget {
 }
 final listProvider= StateProvider<List<Map<String, String>>>((ref)=>[]);
 
+
 class Main extends ConsumerStatefulWidget{
   const Main({super.key});
 
@@ -27,9 +32,12 @@ class Main extends ConsumerStatefulWidget{
 }
 
 class _MainState extends ConsumerState<Main>{
+
   @override
   Widget build(BuildContext context){
     final list=ref.watch(listProvider);
+    final box = Hive.box('myBox');
+    final name=box.get('task');
     return Scaffold(
       body:Column(
         children:[
@@ -44,7 +52,8 @@ class _MainState extends ConsumerState<Main>{
                   return ListTile(title:Text('$key'),trailing:Text('$value'));
                 })
           ),
-          ElevatedButton(child:Text('Add More'), onPressed:(){Navigator.push(context,MaterialPageRoute(builder:(context)=>Todo()));})
+          ElevatedButton(child:Text('Add More'), onPressed:(){Navigator.push(context,MaterialPageRoute(builder:(context)=>Todo()));}),
+          Text('Latest task: $name')
         ]
       )
     );
@@ -64,6 +73,10 @@ class _TodoState extends ConsumerState<Todo>{
   void addToList(){
     final old_list=ref.read(listProvider);
     ref.read(listProvider.notifier).state=[...old_list,{_title.text:_value.text}];
+    final box = Hive.box('myBox');
+    box.put('task', _title.text);
+    //box.delete('name'); // Removes key 'name'
+    //box.clear();        // Clears entire box
     _title.clear();
     _value.clear();
   }
