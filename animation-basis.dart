@@ -87,4 +87,79 @@ class _Page2State extends State<Page2>{
       )
     );
   }
+
+}
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//scrub/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ScrollScrubDemo extends StatefulWidget {
+  const ScrollScrubDemo({super.key});
+
+  @override
+  State<ScrollScrubDemo> createState() => _ScrollScrubDemoState();
+}
+
+class _ScrollScrubDemoState extends State<ScrollScrubDemo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController = ScrollController();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+
+    _scale = Tween<double>(begin: 0.5, end: 2).animate(_controller);
+
+    _scrollController.addListener(() {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final scrollFraction =(_scrollController.offset / maxScroll).clamp(0.0, 1.0);
+      _controller.value = scrollFraction;
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ListView(
+        controller: _scrollController,
+        children: [
+          const SizedBox(height: 600), // Empty space to scroll
+          Center(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _scale.value,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    color: Colors.blue,
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 800),// Empty space to scroll
+        ],
+      ),
+    );
+  }
 }
